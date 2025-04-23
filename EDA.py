@@ -13,15 +13,15 @@ coffee = pd.read_csv("coffee.csv")
 # -------------------------------
 print("------ SCHEMA & HEAD (First 2 Rows) ------\n")
 
-print("📁 coffee_id.csv:")
+print("coffee_id.csv:")
 print(coffee_id.info())
 print(coffee_id.head(2), "\n")
 
-print("📁 coffee_clean.csv:")
+print("coffee_clean.csv:")
 print(coffee_clean.info())
 print(coffee_clean.head(2), "\n")
 
-print("📁 coffee.csv:")
+print("coffee.csv:")
 print(coffee.info())
 print(coffee.head(2), "\n")
 
