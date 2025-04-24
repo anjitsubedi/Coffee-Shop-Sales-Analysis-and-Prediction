@@ -4,29 +4,31 @@ import joblib
 import os
 
 # --------------------------
-# Debug info for paths
-# --------------------------
-st.write("📂 Current Working Directory:", os.getcwd())
-st.write("📁 Files in Directory:", os.listdir())
-
-# --------------------------
-# Load models and encoders safely
-# --------------------------
-try:
-    rf_model = joblib.load("coffee_rf_model.pkl")
-    clf_model = joblib.load("coffee_clf_model.pkl")
-    label_encoders = joblib.load("coffee_label_encoders.pkl")
-except FileNotFoundError as e:
-    st.error(f"❌ File not found: {e.filename}")
-    st.stop()
-except Exception as e:
-    st.error(f"⚠️ Unexpected error loading models: {e}")
-    st.stop()
-
-# --------------------------
-# App Config
+# Set page configuration
 # --------------------------
 st.set_page_config(page_title="Coffee Rating Predictor", layout="centered")
+
+# --------------------------
+# Load Models and Encoders
+# --------------------------
+MODEL_FILES = {
+    "rf_model": "coffee_rf_model.pkl",
+    "clf_model": "coffee_clf_model.pkl",
+    "label_encoders": "coffee_label_encoders.pkl"
+}
+
+missing_files = [f for f in MODEL_FILES.values() if not os.path.exists(f)]
+if missing_files:
+    st.error(f"❌ The following required files are missing: {', '.join(missing_files)}")
+    st.stop()
+
+try:
+    rf_model = joblib.load(MODEL_FILES["rf_model"])
+    clf_model = joblib.load(MODEL_FILES["clf_model"])
+    label_encoders = joblib.load(MODEL_FILES["label_encoders"])
+except Exception as e:
+    st.error(f"⚠️ Error loading model files: {e}")
+    st.stop()
 
 # --------------------------
 # App Title
@@ -37,12 +39,16 @@ st.write("Choose the roast, region, and attributes to predict the **customer rat
 # --------------------------
 # User Inputs
 # --------------------------
-roast_input = st.selectbox("Select Roast Type", label_encoders['roast types'].classes_)
-region_input = st.selectbox("Select Region", label_encoders['regions'].classes_)
-type_attr_input = st.selectbox("Select Type Attribute", label_encoders['type attributes'].classes_)
+try:
+    roast_input = st.selectbox("Select Roast Type", label_encoders['roast types'].classes_)
+    region_input = st.selectbox("Select Region", label_encoders['regions'].classes_)
+    type_attr_input = st.selectbox("Select Type Attribute", label_encoders['type attributes'].classes_)
+except Exception as e:
+    st.error(f"❌ Error loading encoder values: {e}")
+    st.stop()
 
 # --------------------------
-# Encoding Inputs
+# Encode Inputs
 # --------------------------
 try:
     roast_encoded = label_encoders['roast types'].transform([roast_input])[0]
@@ -52,11 +58,11 @@ try:
     input_data = pd.DataFrame([[roast_encoded, region_encoded, type_attr_encoded]],
                               columns=['roast types', 'regions', 'type attributes'])
 except Exception as e:
-    st.error(f"❌ Error encoding input values: {e}")
+    st.error(f"❌ Error encoding the input: {e}")
     st.stop()
 
 # --------------------------
-# Predictions
+# Prediction
 # --------------------------
 if st.button("🔮 Predict"):
     try:
@@ -66,4 +72,4 @@ if st.button("🔮 Predict"):
         st.success(f"⭐ **Predicted Rating:** {round(rating_pred, 2)} / 5.0")
         st.info(f"📊 **Popularity Tier:** {tier_pred}")
     except Exception as e:
-        st.error(f"❌ Prediction error: {e}")
+        st.error(f"❌ Prediction failed: {e}")
